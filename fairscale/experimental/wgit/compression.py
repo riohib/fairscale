@@ -10,9 +10,9 @@ def sparsify(in_tensor: torch.Tensor, sparsity: float) -> torch.Tensor:
 
     Args:
         in_tensor (torch.Tensor)
-            path to the directory from where search is started.
+            input dense tensor
         sparsity (float)
-            target sparsity of the tensor
+            target sparsity for tensor sparsification
     """
     abs_tensor = torch.abs(in_tensor)
     threshold = torch.quantile(abs_tensor, sparsity)  # type: ignore
@@ -25,9 +25,10 @@ def get_mask(in_tensor: torch.Tensor, sparsity: float) -> torch.BoolTensor:
 
     Args:
         in_tensor (torch.Tensor)
-            path to the directory from where search is started.
+            input torch tensor for which sparse mask is generated.
         sparsity (float)
-            target sparsity of the tensor
+            target sparsity of the tensor for mask generation.
+
     """
     abs_tensor = torch.abs(in_tensor)
     threshold = torch.quantile(abs_tensor, sparsity)  # type: ignore
@@ -39,7 +40,7 @@ def layerwise_threshold(state_dict: OrderedDict, comp_layers: List[str], sparsit
 
     Args:
         state_dict (OrderedDict)
-            path to the directory from where search is started.
+            state_dict of a dense model.
         comp_layers (List[str])
             A list of layer names which should be thresholded.
         sparsity (float)
@@ -57,7 +58,7 @@ def fft_threshold(state_dict: OrderedDict, comp_layers: List[str], sparsity: flo
 
     Args:
         state_dict (OrderedDict)
-            path to the directory from where search is started.
+            state_dict of a dense model.
         comp_layers (List[str])
             A list of layer names which should be compressed.
         sparsity (float)
