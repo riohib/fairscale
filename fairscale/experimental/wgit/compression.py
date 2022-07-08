@@ -1,3 +1,9 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the BSD license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 from collections import OrderedDict
 from typing import List
 
@@ -20,7 +26,7 @@ def sparsify(in_tensor: torch.Tensor, sparsity: float) -> torch.Tensor:
     return sps_tensor
 
 
-def get_mask(in_tensor: torch.Tensor, sparsity: float) -> torch.BoolTensor:
+def get_mask(in_tensor: torch.Tensor, sparsity: float) -> torch.Tensor:
     """Get a mask for a tensor corresponding to a certain sparsity level.
 
     Args:
@@ -31,7 +37,10 @@ def get_mask(in_tensor: torch.Tensor, sparsity: float) -> torch.BoolTensor:
 
     """
     abs_tensor = torch.abs(in_tensor)
-    threshold = torch.quantile(abs_tensor, sparsity)  # type: ignore
+    if sparsity == 0.0:  # if sparsity is zero, we want a mask with all 1's
+        threshold = torch.tensor(float("-Inf"), device=in_tensor.device)
+    else:
+        threshold = torch.quantile(abs_tensor, sparsity)  # type: ignore
     return abs_tensor > threshold
 
 
