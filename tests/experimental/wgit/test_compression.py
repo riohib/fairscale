@@ -109,7 +109,7 @@ def test_fft_threshold(pre_reqs):
             assert is_eq
 
 
-def test_ifft_threshold(pre_reqs):
+def test_ifft(pre_reqs):
     fft_sd = comp.fft_threshold(pre_reqs.state_dict, pre_reqs.comp_layers, 0.0)
     ifft_sd = comp.inverse_fft(fft_sd, pre_reqs.comp_layers)
     for key in pre_reqs.state_dict.keys():
@@ -119,4 +119,29 @@ def test_ifft_threshold(pre_reqs):
             assert is_eq
 
 
-# TODO: Tests for delta_sparse functionsss
+def test_delta(pre_reqs):
+    fft_sd = comp.fft_threshold(pre_reqs.state_dict, pre_reqs.comp_layers, 0.0)
+    ifft_sd = comp.inverse_fft(fft_sd, pre_reqs.comp_layers)
+    delta_sd = comp.delta(pre_reqs.state_dict, ifft_sd)  # Compute the delta_W = W - W'
+
+    for key in delta_sd.keys():
+        if key in pre_reqs.comp_layers:
+            delta = pre_reqs.state_dict[key] - ifft_sd[key]
+            # check if the delta function calculates the correct difference between state_d and reconds ifft_sd
+            is_eq = torch.all(torch.isclose(delta_sd[key], delta, atol=1e-4))
+            assert is_eq
+
+
+def test_recons_from_del_sparse(pre_reqs):
+    fft_sd = comp.fft_threshold(pre_reqs.state_dict, pre_reqs.comp_layers, 0.0)
+    ifft_sd = comp.inverse_fft(fft_sd, pre_reqs.comp_layers)
+    delta_sd = comp.delta(pre_reqs.state_dict, ifft_sd)  # Compute the delta_W = W - W'
+
+    # # test with threshold at sparsity zero to verify perfect reconstruction after fft -> ifft -> and delta sps
+    # delta_sps_sd = comp.layerwise_threshold(delta_sd, pre_reqs.comp_layers, sparsity = 0.0)
+    recons_sd = comp.recons_from_del_sparse(delta_sd, ifft_sd)  # Reconstruct the model SD from delta_W and W'
+
+    for key in delta_sd.keys():
+        if key in pre_reqs.comp_layers:
+            is_eq = torch.all(torch.isclose(pre_reqs.state_dict[key], recons_sd[key], atol=1e-4))
+            assert is_eq
